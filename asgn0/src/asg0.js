@@ -10,17 +10,17 @@ function main() {
   // Get the rendering context for 2DCG
   var ctx = canvas.getContext('2d');
 
-  // Draw a blue rectangle
+  /* Draw a blue rectangle
   ctx.fillStyle = 'rgba(0, 0, 255, 1.0)'; // Set color to blue
-  ctx.fillRect(120, 10, 150, 150);        // Fill a rectangle with the color
+  ctx.fillRect(120, 10, 150, 150);        // Fill a rectangle with the color */
 
   // Black canvas
-  ctx.fillStyle = "black";
+  ctx.fillStyle = 'rgba(0, 0, 0, 1.0)';
   ctx.fillRect(0, 0, canvas.width, canvas.height); // Fill the background with black
 
-  // Draw a red vector v1
+  /* Draw a red vector
   let v1 = new Vector3([2.25, 2.25, 0.0]);
-  drawVector(v1, 'red');
+  drawVector(v1, 'red');*/
 }
 
 function drawVector(v, color) {
