@@ -9,12 +9,23 @@
     <canvas id="webgl" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
+    
+    <p id="numdot">XXX</p>
 
     <p>
     <button type="button" id="green">Green</button>
     <button type="button" id="red">Red</button>
-    
+
     <button type="button" id="clearButton">Clear</button>
+
+    <button type="button" id="jadeDrawing">DRAW A PIC</button>
+
+    <p>
+      <button type="button" id="pointButton">Point</button>
+      <button type="button" id="triButton">Triangle</button>
+      <button type="button" id="circleButton">Circle</button>
+      <button type="button" id="paintBrush">Glow Brush</button>
+    </p>
 
     <p>
       Red <input type = "range" min = "0" max = "100" value = "0" id = "redSlider">
@@ -26,10 +37,18 @@
     <p>
       Size <input type = "range" min = "5" max = "40" value = "5" id = "sizeSlider">
 
+    <p>
+      * I created a glow brush as my addition! It's a bit laggy especially when painting fast, <br>
+      but hopefully the effect comes through (it looks better with brighter colors).
+    </p>
+
     <script src="../lib/webgl-utils.js"></script>
     <script src="../lib/webgl-debug.js"></script>
     <script src="../lib/cuon-utils.js"></script>
+    <script src="Triangle.js"></script>
     <script src="Point.js"></script>
+    <script src="Circle.js"></script>
+    <script src="Brush.js"></script>
     <script src="ColoredPoints.js"></script>
   </body>
 </html>

@@ -17,17 +17,25 @@ var FSHADER_SOURCE = `
     gl_FragColor = u_FragColor;
   }
 `;
+// Constants
+const POINT = 0;
+const TRIANGLE = 1;
+const CIRCLE = 2;
+const BRUSH = 3;
+
 // Global variables
 let canvas, gl, a_Position, u_FragColor, u_Size;
 let g_selectedColor = [1.0, 1.0, 1.0, 1.0];
 let g_selectedSize = 5;
+let g_selectedType = POINT;
 
 function setupWebGL(){
   // Retrieve <canvas> element
   canvas = document.getElementById('webgl');
 
   // Get the rendering context for WebGL
-  gl = getWebGLContext(canvas);
+  //gl = getWebGLContext(canvas);
+  gl = canvas.getContext("webgl", {preserveDrawingBuffer: true});
   if (!gl) {
     console.log('Failed to get the rendering context for WebGL');
     return;
@@ -68,6 +76,13 @@ function addActionsHTML(){
   document.getElementById('red').onclick = function(){ g_selectedColor = [1.0, 0.0, 0.0, 1.0]; };
   document.getElementById('clearButton').onclick = function(){ g_shapesList = []; renderAllShapes(); };
 
+  document.getElementById('jadeDrawing').onclick = myDrawing;
+
+  document.getElementById('pointButton').onclick = function(){ g_selectedType = POINT; };
+  document.getElementById('triButton').onclick = function(){ g_selectedType = TRIANGLE; };
+  document.getElementById('circleButton').onclick = function(){ g_selectedType = CIRCLE; };
+  document.getElementById('paintBrush').onclick = function(){ g_selectedType = BRUSH; };
+
   //Sliders
   document.getElementById('redSlider').addEventListener('mouseup', function(){ g_selectedColor[0] = this.value/100; });
   document.getElementById('greenSlider').addEventListener('mouseup', function(){ g_selectedColor[1] = this.value/100; });
@@ -83,8 +98,12 @@ function main() {
 
   addActionsHTML();
 
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = click;
+  canvas.onmousemove = function(ev){ if(ev.buttons == 1) { click(ev); } };
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -102,27 +121,20 @@ function click(ev) {
 
   let [x, y] = convertCoordinates(ev);
 
-  let point = new Point();
+  let point;
+  if (g_selectedType == POINT) {
+    point = new Point();
+  } else if (g_selectedType == TRIANGLE) {
+    point = new Triangle();
+  } else if (g_selectedType == CIRCLE) {
+    point = new Circle();
+  } else {
+    point = new Brush();
+  }
   point.position = [x, y];
   point.color = g_selectedColor.slice();
   point.size = g_selectedSize;
   g_shapesList.push(point);
-
-  /* Store the coordinates to g_points array
-  g_points.push([x, y]);
-
-  g_colors.push(g_selectedColor.slice());
-
-  // Store the coordinates to g_points array
-  if (x >= 0.0 && y >= 0.0) {      // First quadrant
-    g_colors.push([1.0, 0.0, 0.0, 1.0]);  // Red
-  } else if (x < 0.0 && y < 0.0) { // Third quadrant
-    g_colors.push([0.0, 1.0, 0.0, 1.0]);  // Green
-  } else {                         // Others
-    g_colors.push([1.0, 1.0, 1.0, 1.0]);  // White
-  }
-  
-  g_sizes.push(g_selectedSize);*/
 
   renderAllShapes();
 }
@@ -139,6 +151,7 @@ function convertCoordinates(ev){
 }
 
 function renderAllShapes(){
+  var startTime = performance.now();
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -146,4 +159,37 @@ function renderAllShapes(){
   for(var i = 0; i < len; i++) {
     g_shapesList[i].render();
   }
+
+  var duration = performance.now() - startTime;
+  sendTextToHTML("numdot: " + len + " ms: " + Math.floor(duration) + " fps: " + Math.floor(1000/duration), "numdot");
+}
+
+function sendTextToHTML(text, htmlID){
+  var htmlElement = document.getElementById(htmlID);
+  if (!htmlElement){
+    console.log("Failed to get " + htmlID + " from HTML");
+    return;
+  }
+  htmlElement.innerHTML = text;
+}
+
+
+function myDrawing(){
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  
+  const drawingTriangles = [
+    { points: [[-0.5, 0.5], [-0.3, 0.2], [-0.7, 0.1]], color: [1.0, 0.0, 0.0, 1.0] },
+    { points: [[-0.5, 0.5], [-0.5, 0.6], [-0.5, 0.5]], color: [1.0, 0.0, 0.0, 1.0] },
+    // Add at least 20 triangles like this...
+  ];
+
+  for (const tri of drawingTriangles) {
+    const t = new Triangle();
+    t.position = tri.points.flat();  // [x1, y1, x2, y2, x3, y3]
+    t.color = tri.color;
+    t.size = 20;
+    g_shapesList.push(t);
+  }
+
+  renderAllShapes();
 }
