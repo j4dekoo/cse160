@@ -1,4 +1,3 @@
-// ColoredPoint.js (c) 2012 matsuda
 // Vertex shader program
 var VSHADER_SOURCE = `
   attribute vec4 a_Position;
@@ -95,7 +94,7 @@ function main() {
   addActionsHTML();
 
   // Register function (event handler) to be called on a mouse press
-  canvas.onmousedown = getCurrPos;
+  canvas.onmousedown = function(ev){ g_currMouse = [ev.clientX, ev.clientY]; };
   canvas.onmousemove = function(ev){ if(ev.buttons == 1) { click(ev); } };
 
   // Specify the color for clearing <canvas>
@@ -113,11 +112,6 @@ function tick(){
   renderAllShapes();
 
   requestAnimationFrame(tick);
-}
-
-
-function getCurrPos(ev) {
-  g_currMouse = [ev.clientX, ev.clientY];
 }
 
 function click(ev) {
@@ -170,42 +164,125 @@ function renderAllShapes(){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  //draw a cube
+  // BODY
   var body = new Cube();
-  body.color = [1.0, 0.0, 0.0, 1.0];
-  body.matrix.translate(-0.25, -0.75, 0.0);
-  body.matrix.rotate(-5, 1, 0, 0);
-  body.matrix.scale(0.5, 0.3, 0.5);
+  body.color = [1.0, 1.0, 0.92, 1.0];
+  body.matrix.translate(-0.6, -0.75, 0.0);
+  var upperBodyCoord = new Matrix4(body.matrix);
+  body.matrix.rotate(-2, 1, 0, 0);
+  body.matrix.scale(0.7, 0.1, 0.4);
   body.render();
 
-  var leftArm = new Cube();
-  leftArm.color = [1.0, 1.0, 0.0, 1.0];
-  leftArm.matrix.translate(0.0, -0.5, 0.0);
-  leftArm.matrix.rotate(-5, 1, 0, 0);
-  leftArm.matrix.rotate(-g_yellowAngle, 0, 0, 1);
-  var yellowCoordinates = new Matrix4(leftArm.matrix);
+  var upperBody = new Cube();
+  upperBody.color = [1.0, 1.0, 0.92, 1.0];
+  upperBody.matrix = upperBodyCoord;
+  upperBody.matrix.translate(-0.05, 0.1, 0);
+  var bodyCoord = new Matrix4(upperBody.matrix);
+  upperBody.matrix.scale(0.8, 0.2, 0.4);
+  upperBody.render();
 
-  leftArm.matrix.scale(0.25, 0.7, 0.5);
-  leftArm.matrix.translate(-0.5, 0.0, 0.0);
-  leftArm.render();
+  var tail = new Cube();
+  tail.color = [1.0, 1.0, 0.92, 1.0];
+  tail.matrix = bodyCoord;
+  tail.matrix.translate(-0.18, 0.23, 0.03);
+  tail.matrix.rotate(-35, 0, 0, 1);
+  tail.matrix.scale(0.2, 0.1, 0.35)
+  tail.render();
 
-  var box = new Cube();
-  box.color = [1.0, 0.0, 1.0, 1.0];
-  box.matrix = yellowCoordinates;
-  box.matrix.translate(0, 0.65, 0)
-  box.matrix.rotate(-g_magentaAngle, 0, 0, 1);
-  box.matrix.scale(0.3, 0.3, 0.3);
-  box.matrix.translate(-0.5, 0.0, -0.001)
-  box.render();
+  // NECK !!!!! FIX JOIN CONNECT !!!!
+  var baseNeck = new Cube();
+  baseNeck.color = [1.0, 1.0, 0.92, 1.0];
+  baseNeck.matrix.translate(0.05, -0.5, 0.05);
+  var neck2Coord = new Matrix4(baseNeck.matrix);
+  baseNeck.matrix.rotate(-30, 0, 0, 1);
+  baseNeck.matrix.scale(0.2, 0.1, 0.35);
+  baseNeck.render();
 
-  var k = 5;
-  for(var i = 0; i < k; i++){
-    var c = new Cube();
-    c.matrix.translate(-0.8, 1.9 * i / k - 1, 0.0);
-    c.matrix.rotate(g_seconds * 100, 1, 1, 1);
-    c.matrix.scale(0.1, 0.5 / k, 1.0 / k);
-    c.render();
-  }
+  var neck2 = new Cube();
+  neck2.color = [1.0, 1.0, 0.92, 1.0];
+  neck2.matrix = neck2Coord;
+  neck2.matrix.translate(0.15, -0.09, 0.07);
+  var neck3Coord = new Matrix4(neck2.matrix);
+  neck2.matrix.rotate(-15, 0, 0, 1);
+  neck2.matrix.scale(0.15, 0.3, 0.18);
+  neck2.render();
+
+  var neck3 = new Cube();
+  neck3.color = [1.0, 1.0, 0.92, 1.0];
+  neck3.matrix = neck3Coord;
+  neck3.matrix.translate(0.09, 0.18, 0.03);
+  var neck4Coord = new Matrix4(neck3.matrix);
+  neck3.matrix.rotate(25, 0, 0, 1);
+  neck3.matrix.scale(0.15, 0.25, 0.13);
+  neck3.render();
+
+  var neck4 = new Cube();
+  neck4.color = [1.0, 1.0, 0.92, 1.0];
+  neck4.matrix = neck4Coord;
+  neck4.matrix.translate(-0.1, 0.2, 0.001);
+  var neck5Coord = new Matrix4(neck4.matrix);
+  neck4.matrix.rotate(30, 0, 0, 1);
+  neck4.matrix.scale(0.15, 0.25, 0.13);
+  neck4.render();
+
+  var neck5 = new Cube();
+  neck5.color = [1.0, 1.0, 0.92, 1.0];
+  neck5.matrix = neck5Coord;
+  neck5.matrix.translate(-0.13, 0.2, 0.001);
+  var neck6Coord = new Matrix4(neck5.matrix);
+  neck5.matrix.rotate(5, 0, 0, 1);
+  neck5.matrix.scale(0.15, 0.28, 0.13);
+  neck5.render();
+
+  var neck6 = new Cube();
+  neck6.color = [1.0, 1.0, 0.92, 1.0];
+  neck6.matrix = neck6Coord;
+  neck6.matrix.translate(-0.02, 0.28, 0.001);
+  var neck7Coord = new Matrix4(neck6.matrix);
+  neck6.matrix.rotate(-20, 0, 0, 1);
+  neck6.matrix.scale(0.15, 0.23, 0.13);
+  neck6.render();
+
+  var neck7 = new Cube();
+  neck7.color = [1.0, 1.0, 0.92, 1.0];
+  neck7.matrix = neck7Coord;
+  neck7.matrix.translate(0.09, 0.22, 0.001);
+  var faceCoord = new Matrix4(neck7.matrix);
+  neck7.matrix.rotate(-100, 0, 0, 1);
+  neck7.matrix.scale(0.15, 0.2, 0.13);
+  neck7.render();
+
+  // HEAD + BEAK
+  var face = new Cube();
+  face.color = [1.0, 1.0, 0.92, 1.0];
+  face.matrix = faceCoord;
+  face.matrix.translate(0.18, -0.03, 0.001);
+  face.matrix.rotate(-120, 0, 0, 1);
+  face.matrix.scale(0.15, 0.2, 0.13);
+  face.render();
+
+  // add cone here
+
+  // WINGS
+  var rightWing = new Cube();
+  rightWing.color = [1.0, 1.0, 0.92, 1.0];
+  rightWing.matrix = bodyCoord;
+  rightWing.matrix.translate(4, 3.9, -0.5);
+  var rw1Coord = new Matrix4(rightWing.matrix);
+  rightWing.matrix.rotate(90, 0, 0, 1);
+  rightWing.matrix.scale(1.5, 1, 0.5)
+  rightWing.render();
+
+  var rw1 = new Cube();
+  rw1.color = [1.0, 0.0, 0.92, 1.0];
+  rw1.matrix = rw1Coord;
+  rw1.matrix.translate(-1.1, -0.1, 0.001);
+  var rw2Coord = new Matrix4(rw1.matrix);
+  rw1.matrix.rotate(80, 0, 0, 1);
+  rw1.matrix.scale(1.5, 1, 0.5)
+  rw1.render();
+
+
 
   var duration = performance.now() - startTime;
   sendTextToHTML(" ms: " + Math.floor(duration) + " fps: " + Math.floor(1000/duration), "numdot");
