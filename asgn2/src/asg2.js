@@ -32,6 +32,9 @@ let g_lastUpdate = 0;
 let g_globalAngle = 0;
 let g_bodyX = 0;
 
+let g_neckAngle = 0;
+let g_headAngle = 0;
+
 let g_ProjectionMatrix = new Matrix4();
 let coatColor = [1.0, 1.0, 0.92, 1.0];
 
@@ -90,7 +93,9 @@ function connectVariablesToGLSL(){
 
 function addActionsHTML(){
   document.getElementById("resetCamButton").addEventListener("click", resetCam);
-  document.getElementById('angleSlider').addEventListener('mousemove', function(){ g_camX = this.value; renderAllShapes(); });
+  document.getElementById('angleSlider').addEventListener('input', function(){ g_camX = this.value; renderAllShapes(); });
+  document.getElementById('neckSlider').addEventListener('input', function(){ g_neckAngle = this.value; renderAllShapes(); });
+  document.getElementById('headSlider').addEventListener('input', function(){ g_headAngle = this.value; renderAllShapes(); });
 }
 
 function main() {
@@ -141,6 +146,9 @@ function click(ev) {
   g_camX += xy[0] * 360
   g_camY += xy[1] * 360
 
+  console.log(g_camX, g_camY);
+  if (g_camY < -1) g_camY = -1;
+
   document.getElementById("angleSlider").value = g_camX;
 
   renderAllShapes();
@@ -159,7 +167,7 @@ function convertCoordinates(ev){
 function resetCam(){
   g_camX = 0;
   g_camY = 0;
-  g_camZ = 10;
+  g_camZ = 15;
   document.getElementById("angleSlider").value = g_camX;
 }
 
@@ -180,6 +188,14 @@ function renderAllShapes(){
 
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  var pond = new Cone();
+  pond.color = [0.4, 0.7, 1.0, 1.0]; // light blue
+  pond.segments = 30;
+  pond.matrix.translate(0, -0.75, 0);
+  pond.matrix.rotate(180, 1, 0, 0);
+  pond.matrix.scale(15, 0.01, 15);
+  pond.render();
 
   // BODY
   var body = new Cube();
@@ -223,6 +239,7 @@ function renderAllShapes(){
   neck2.color = coatColor;
   neck2.matrix = neck2Coord;
   neck2.matrix.translate(0.15, -0.09, -0.1);
+  neck2.matrix.rotate(-g_neckAngle, 0, 0, 1);
   var neck3Coord = new Matrix4(neck2.matrix);
   neck2.matrix.rotate(-15, 0, 0, 1);
   neck2.matrix.scale(0.15, 0.3, 0.18);
@@ -232,6 +249,7 @@ function renderAllShapes(){
   neck3.color = coatColor;
   neck3.matrix = neck3Coord;
   neck3.matrix.translate(0.09, 0.18, 0.03);
+  neck3.matrix.rotate(-g_neckAngle * 0.2, 0, 0, 1);
   var neck4Coord = new Matrix4(neck3.matrix);
   neck3.matrix.rotate(27, 0, 0, 1);
   neck3.matrix.scale(0.15, 0.25, 0.13);
@@ -241,6 +259,7 @@ function renderAllShapes(){
   neck4.color = coatColor;
   neck4.matrix = neck4Coord;
   neck4.matrix.translate(-0.1, 0.2, 0.001);
+  neck4.matrix.rotate(-g_neckAngle * 0.18, 0, 0, 1);
   var neck5Coord = new Matrix4(neck4.matrix);
   neck4.matrix.rotate(29.5, 0, 0, 1);
   neck4.matrix.scale(0.15, 0.25, 0.13);
@@ -250,6 +269,7 @@ function renderAllShapes(){
   neck5.color = coatColor;
   neck5.matrix = neck5Coord;
   neck5.matrix.translate(-0.125, 0.215, 0.001);
+  neck5.matrix.rotate(-g_neckAngle * 0.2, 0, 0, 1);
   var neck6Coord = new Matrix4(neck5.matrix);
   neck5.matrix.rotate(5, 0, 0, 1);
   neck5.matrix.scale(0.15, 0.27, 0.13);
@@ -259,6 +279,7 @@ function renderAllShapes(){
   neck6.color = coatColor;
   neck6.matrix = neck6Coord;
   neck6.matrix.translate(-0.025, 0.265, 0.001);
+  neck6.matrix.rotate(-g_headAngle, 0, 0, 1);
   var neck7Coord = new Matrix4(neck6.matrix);
   neck6.matrix.rotate(-24, 0, 0, 1);
   neck6.matrix.scale(0.15, 0.24, 0.13);
@@ -372,7 +393,7 @@ function renderAllShapes(){
     feather.matrix = new Matrix4(lWingBaseCoord);
 
     feather.matrix.translate(
-      -0.09 * i + 0.1,
+      -0.09 * i + 0.2,
       i * 0.13 - 0.52,
       -0.001 * i + 0.01// slight offset to avoid z-fighting
     );
