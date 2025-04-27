@@ -27,6 +27,7 @@ const BRUSH = 3;
 let canvas, gl, a_Position, u_FragColor;
 let g_currMouse = [0, 0];
 let g_camX = 0, g_camY = 0, g_camZ = 3;
+let g_lastUpdate = 0;
 
 let g_globalAngle = 0;
 let g_bodyX = 0;
@@ -99,9 +100,10 @@ function main() {
 
   addActionsHTML();
 
+  // FIX CAMERA ANGLE SLIDER AND CLICK SCROLL CRASHING
   resizeCanvas();
   window.addEventListener("resize", resizeCanvas, false);
-  window.addEventListener("wheel", function(ev){
+  canvas.addEventListener("wheel", function(ev){
     if (ev.deltaY < 0) {
       g_camZ -= 0.4;
     } else {
@@ -157,7 +159,7 @@ function convertCoordinates(ev){
 function resetCam(){
   g_camX = 0;
   g_camY = 0;
-  g_camZ = 3;
+  g_camZ = 10;
   document.getElementById("angleSlider").value = g_camX;
 }
 
@@ -179,8 +181,6 @@ function renderAllShapes(){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
- 
-
   // BODY
   var body = new Cube();
   body.color = coatColor;
@@ -188,7 +188,7 @@ function renderAllShapes(){
   body.matrix.rotate(g_bodyX, 0, 0, 1);
   var upperBodyCoord = new Matrix4(body.matrix);
   body.matrix.rotate(-2, 1, 0, 0);
-  body.matrix.scale(0.7, 0.1, 0.4);
+  body.matrix.scale(0.8, 0.1, 0.4);
   body.render();
 
   var upperBody = new Cube();
@@ -196,7 +196,7 @@ function renderAllShapes(){
   upperBody.matrix = upperBodyCoord;
   upperBody.matrix.translate(-0.05, 0.1, 0);
   var bodyCoord = new Matrix4(upperBody.matrix);
-  upperBody.matrix.scale(0.8, 0.2, 0.4);
+  upperBody.matrix.scale(0.9, 0.2, 0.4);
   upperBody.render();
 
  // TAIL
@@ -213,7 +213,7 @@ function renderAllShapes(){
   var baseNeck = new Cone();
   baseNeck.color = coatColor;
   baseNeck.matrix = new Matrix4(bodyCoord);
-  baseNeck.matrix.translate(0.95, -0.15, 0.18);
+  baseNeck.matrix.translate(1, -0.15, 0.18);
   var neck2Coord = new Matrix4(baseNeck.matrix);
   baseNeck.matrix.rotate(-110, 0, 0, 1);
   baseNeck.matrix.scale(0.25, 0.32, 0.35);
@@ -313,38 +313,83 @@ function renderAllShapes(){
   var rw2 = new Cube();
   rw2.color = coatColor;
   rw2.matrix = rw2Coord;
-  rw2.matrix.translate(-0.6, 0.16, 0.001);
-  var wingBaseCoord = new Matrix4(rw2.matrix);
+  rw2.matrix.translate(-0.8, 0.19, 0.001);
+  var rWingBaseCoord = new Matrix4(rw2.matrix);
   rw2.matrix.rotate(-10, 0, 0, 1);
-  rw2.matrix.scale(0.3, 0.14, 0.05)
+  rw2.matrix.scale(0.5, 0.14, 0.05)
   rw2.render();
-
-  let numFeathers = 5;
+  
+  let numFeathers = 6;
   for (let i = 0; i < numFeathers; i++) {
     let feather = new Cube();
     feather.color = [1.0, 1.0, 0.92, 1.0];
-    feather.matrix = new Matrix4(wingBaseCoord);
+    feather.matrix = new Matrix4(rWingBaseCoord);
 
     feather.matrix.translate(
-      -0.1 * i + 0.3,
-      -0.3 + i * 0.1,
-      0.005 * i // slight offset to avoid z-fighting
+      -0.09 * i + 0.3,
+      i * 0.13 - 0.6,
+      -0.001 * i + 0.01// slight offset to avoid z-fighting
     );
-
-    feather.matrix.rotate(-5 * i, 0, 0, 1);
-
+    feather.matrix.rotate(-6 * i * 0.8, 0, 0, 1);
     feather.matrix.scale(
-      0.2 + i * 0.03,
-      0.1,
-      0.05
+      0.5 + i * 0.08,
+      0.15,
+      0.04
     );
-
     feather.render();
   }
 
+  var leftWing = new Cube();
+  leftWing.color = coatColor;
+  leftWing.matrix = new Matrix4(bodyCoord);
+  leftWing.matrix.translate(0.98, -0.05, -0.06);
+  var lw1Coord = new Matrix4(leftWing.matrix);
+  leftWing.matrix.rotate(115, 0, 0, 1);
+  leftWing.matrix.scale(0.4, 0.15, 0.05)
+  leftWing.render();
+
+  var lw1 = new Cube();
+  lw1.color = coatColor;
+  lw1.matrix = lw1Coord;
+  lw1.matrix.translate(-0.165, 0.355, 0.001);
+  var rw2Coord = new Matrix4(lw1.matrix);
+  lw1.matrix.rotate(140, 0, 0, 1);
+  lw1.matrix.scale(0.4, 0.15, 0.05)
+  lw1.render();
+
+  var lw2 = new Cube();
+  lw2.color = coatColor;
+  lw2.matrix = rw2Coord;
+  lw2.matrix.translate(-0.6, 0.16, 0.001);
+  var lWingBaseCoord = new Matrix4(lw2.matrix);
+  lw2.matrix.rotate(-10, 0, 0, 1);
+  lw2.matrix.scale(0.3, 0.14, 0.05)
+  lw2.render();
+
+  for (let i = 0; i < numFeathers; i++) {
+    let feather = new Cube();
+    feather.color = [1.0, 1.0, 0.92, 1.0];
+    feather.matrix = new Matrix4(lWingBaseCoord);
+
+    feather.matrix.translate(
+      -0.09 * i + 0.1,
+      i * 0.13 - 0.52,
+      -0.001 * i + 0.01// slight offset to avoid z-fighting
+    );
+    feather.matrix.rotate(-6 * i * 0.8, 0, 0, 1);
+    feather.matrix.scale(
+      0.5 + i * 0.08,
+      0.15,
+      0.04
+    );
+    feather.render();
+  }
 
   var duration = performance.now() - startTime;
-  sendTextToHTML(" ms: " + Math.floor(duration) + " fps: " + Math.floor(1000/duration), "numdot");
+  if(performance.now() - g_lastUpdate > 1000){
+    sendTextToHTML(" fps: " + Math.floor(1000/duration), "numdot");
+    g_lastUpdate = performance.now();
+  }
 }
 
 function sendTextToHTML(text, htmlID){
