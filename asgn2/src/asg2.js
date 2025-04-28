@@ -112,7 +112,12 @@ function connectVariablesToGLSL() {
 
 function addActionsHTML() {
   document.getElementById("resetCamButton").addEventListener("click", resetCam);
-  document.getElementById('angleSlider').addEventListener('input', function () { g_camX = this.value; renderAllShapes(); });
+  document.getElementById('angleSlider').addEventListener('input', function () { 
+    g_camX = this.value;
+    //g_currMouse = [canvas.width / 2, canvas.height / 2];
+    resizeCanvas();
+    renderAllShapes();
+  });
   document.getElementById('neckSlider').addEventListener('input', function () { g_neckAngle = this.value; renderAllShapes(); });
   document.getElementById('headSlider').addEventListener('input', function () { g_headAngle = this.value; renderAllShapes(); });
 
@@ -307,22 +312,37 @@ function click(ev) {
 
   let xy = convertCoordinates(ev);
 
-  g_camX += xy[0] * 360
-  g_camY += xy[1] * 360
+  g_camX += xy[0] * 180;
+  g_camY += xy[1] * 180;
 
   g_camY = Math.max(-2, Math.min(85, g_camY));
 
   document.getElementById("angleSlider").value = g_camX;
 
   resizeCanvas();
+  //updateViewMatrix();
   renderAllShapes();
+}
+
+function updateViewMatrix() {
+  const aspect = canvas.width / canvas.height;
+  g_ProjectionMatrix.setPerspective(60, aspect, 0.1, 100);
+
+  let angleX = g_camX * Math.PI / 180;
+  let angleY = g_camY * Math.PI / 180;
+
+  let eyeX = g_camZ * Math.sin(angleX) * Math.cos(angleY);
+  let eyeY = g_camZ * Math.sin(angleY);
+  let eyeZ = g_camZ * Math.cos(angleX) * Math.cos(angleY);
+
+  g_ProjectionMatrix.lookAt(eyeX, eyeY, eyeZ, 0, 0, 0, 0, 1, 0);
 }
 
 function convertCoordinates(ev) {
   var x = ev.clientX; // x coordinate of a mouse pointer
   var y = ev.clientY; // y coordinate of a mouse pointer
   new_x = (x - g_currMouse[0]) / canvas.width;
-  new_y = (y - g_currMouse[1]) / canvas.width;
+  new_y = (y - g_currMouse[1]) / canvas.height;
 
   g_currMouse = [x, y];
   return [new_x, new_y];
