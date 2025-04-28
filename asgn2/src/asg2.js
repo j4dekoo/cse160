@@ -114,7 +114,6 @@ function addActionsHTML() {
   document.getElementById("resetCamButton").addEventListener("click", resetCam);
   document.getElementById('angleSlider').addEventListener('input', function () { 
     g_camX = parseInt(this.value);
-    //g_currMouse = [canvas.width / 2, canvas.height / 2];
     resizeCanvas();
     renderAllShapes();
   });
