@@ -37,6 +37,10 @@ let g_headAngle = 0;
 
 let g_ProjectionMatrix = new Matrix4();
 let coatColor = [1.0, 1.0, 0.92, 1.0];
+let g_swanPosX = 0;
+let g_swanPosZ = 0;
+let g_swanAngle = 0;
+let g_swanSpeed = 0;
 
 
 function resizeCanvas() {
@@ -45,8 +49,8 @@ function resizeCanvas() {
   gl.viewport(0, 0, canvas.width, canvas.height);
   const aspect = canvas.width / canvas.height;
     g_ProjectionMatrix.setPerspective(60, aspect, 0.1, 100);
-    g_ProjectionMatrix.lookAt(0, 0, g_camZ,  // Eye position
-                              0, 0, 0,  // Look at center
+    g_ProjectionMatrix.lookAt(g_swanPosX, 0, g_swanPosZ + 5,  // Eye position
+                              g_swanPosX, 0, g_swanPosZ,  // Look at center
                               0, 1, 0); // Up vector
 }
 
@@ -118,6 +122,13 @@ function main() {
     resizeCanvas();
   })
 
+  // Move swan
+  document.addEventListener("keydown", handleKeyPress);
+  document.addEventListener("keyup", function(ev){ 
+    if (ev.key === "ArrowUp" || ev.key === "ArrowDown")
+      g_swanSpeed = 0; 
+  });
+
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = function(ev){ g_currMouse = [ev.clientX, ev.clientY]; };
   canvas.onmousemove = function(ev){ if(ev.buttons == 1) { click(ev); } };
@@ -133,10 +144,37 @@ var g_seconds = performance.now()/1000.0 - g_startTime;
 function tick(){
   g_seconds = performance.now()/1000.0 - g_startTime;
 
+  moveSwan();
+
   updateAnimationAngles();
   renderAllShapes();
 
   requestAnimationFrame(tick);
+}
+
+function moveSwan(){
+  let angle = (g_swanAngle) * Math.PI / 180;
+  g_swanPosX +=  Math.cos(angle) * g_swanSpeed;
+  g_swanPosZ -= Math.sin(angle) * g_swanSpeed;
+}
+
+function handleKeyPress(ev) {
+  const speed = 0.05;
+  const acc = 0.03;
+  const turnSpeed = 10;
+
+  if (ev.key === "ArrowUp") {
+    g_swanSpeed = Math.min(g_swanSpeed + acc, speed);
+  } else if (ev.key === "ArrowDown") {
+    g_swanAngle += 180;
+    g_swanAngle %= 360;
+  } else if (ev.key === "ArrowLeft") {
+    g_swanAngle += turnSpeed;
+  } else if (ev.key === "ArrowRight") {
+    g_swanAngle -= turnSpeed;;
+  }
+
+  renderAllShapes();
 }
 
 function click(ev) {
@@ -146,8 +184,7 @@ function click(ev) {
   g_camX += xy[0] * 360
   g_camY += xy[1] * 360
 
-  console.log(g_camX, g_camY);
-  if (g_camY < -1) g_camY = -1;
+  g_camY = Math.max(-90, Math.min(90, g_camY));
 
   document.getElementById("angleSlider").value = g_camX;
 
@@ -200,12 +237,23 @@ function renderAllShapes(){
   // BODY
   var body = new Cube();
   body.color = coatColor;
+  body.matrix.translate(g_swanPosX, 0.0, g_swanPosZ);
   body.matrix.translate(-0.5, -0.8, 0.0);
-  body.matrix.rotate(g_bodyX, 0, 0, 1);
+  body.matrix.rotate(g_swanAngle, 0, 1, 0);
+  body.matrix.rotate(g_bodyX, Math.sin(g_seconds * 0.8) * 2, 0, 1);
   var upperBodyCoord = new Matrix4(body.matrix);
   body.matrix.rotate(-2, 1, 0, 0);
   body.matrix.scale(0.8, 0.1, 0.4);
   body.render();
+
+  var ripple = new Cone();
+  ripple.color = [0.3, 0.5, 1.0, 0.9]; 
+  ripple.segments = 15;
+  ripple.matrix = new Matrix4(upperBodyCoord);
+  ripple.matrix.translate(0.5 + 0.07 * Math.sin(g_seconds * 2 + g_bodyX * 0.2), 0.05, 0.18);
+  ripple.matrix.rotate(180, 1, 0, 0);
+  ripple.matrix.scale(1.4 + 0.01 * Math.sin(g_seconds * 0.5 + g_bodyX + 0.9), 0.05, 1.0 + 0.03 * Math.sin(g_seconds * 3 + g_bodyX + 0.1));
+  ripple.render();
 
   var upperBody = new Cube();
   upperBody.color = coatColor;
@@ -259,7 +307,7 @@ function renderAllShapes(){
   neck4.color = coatColor;
   neck4.matrix = neck4Coord;
   neck4.matrix.translate(-0.1, 0.2, 0.001);
-  neck4.matrix.rotate(-g_neckAngle * 0.18, 0, 0, 1);
+  neck4.matrix.rotate(-g_neckAngle * 0.9, 0, 0, 1);
   var neck5Coord = new Matrix4(neck4.matrix);
   neck4.matrix.rotate(29.5, 0, 0, 1);
   neck4.matrix.scale(0.15, 0.25, 0.13);
@@ -359,6 +407,45 @@ function renderAllShapes(){
     );
     feather.render();
   }
+
+  for (let i = 0; i < numFeathers - 1; i++) {
+    /*
+    let shadow = new Cube();
+    shadow.color = [0.2, 0.2, 0.1, 0.38]; // translucent dark gray
+    shadow.matrix = new Matrix4(rWingBaseCoord);
+    shadow.matrix.translate(
+      -0.15 * i + 0.58,
+      i * 0.13 - 0.6,  // Slightly lower Y
+      -0.001 * i + 0.03 // Deeper in Z
+    );
+    shadow.matrix.rotate(-8 * i * 0.8, 0.5, 0, 1);
+    shadow.matrix.scale(
+      0.2 + i * 0.08, // slightly bigger
+      0.15,
+      0.04
+    );
+    shadow.render();*/
+
+    let feather = new Cube();
+    feather.color = [1.0, 1.0, 0.92, 1.0];
+    feather.matrix = new Matrix4(rWingBaseCoord);
+
+    feather.matrix.translate(
+      -0.15 * i + 0.6,
+      i * 0.13 - 0.58,
+      -0.001 * i + 0.04// slight offset to avoid z-fighting
+    );
+
+    let flutter = Math.sin(g_seconds * 23+ i) * 0.1;
+    feather.matrix.rotate(-8 * i * 0.8, 0.6 , 0, 1);
+    feather.matrix.scale(
+      0.2 + i * 0.08,
+      0.15,
+      0.04
+    );
+    feather.render();
+  }
+
 
   var leftWing = new Cube();
   leftWing.color = coatColor;
