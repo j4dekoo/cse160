@@ -48,7 +48,7 @@ function main() {
   //gl.drawArrays(gl.TRIANGLES, 0, n);
   drawTriangle([0, 0.5, -0.5, -0.5, 0.5, -0.5]);
   drawTriangle([0.8, 0.9, -0.7, -0.8, 0.8, 0.4]);
-  drawTriangle([-0.9, 0.8, -0.5, -0.5, -0.5, -0.5]);
+  drawTriangle([0.8, 0.4, 0.8, -0.9, -0.7, -0.8]);
 }
 
 function drawTriangle(vertices) {

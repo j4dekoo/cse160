@@ -41,8 +41,8 @@ let g_headAngle = 0;
 let g_ProjectionMatrix = new Matrix4();
 let coatColor = [1.0, 1.0, 0.92, 1.0];
 let g_swans = [
-  { x: -1.5, y: 0, z: 0, angle: 20, direction: 0, speed: 0.01, turnSpeed: 1, idle: false },
-  { x: 1, y: 0, z: 0, angle: 20, direction: 0, speed: 0.01, turnSpeed: 1, idle: false }
+  { x: -1.5, y: 0, z: 0, angle: 0, direction: 0, speed: 0.01, turnSpeed: 1 },
+  { x: 1, y: 0, z: 0, angle: 0, direction: 0, speed: 0.01, turnSpeed: 1 }
 ]
 
 let g_matingAnim = false;
@@ -145,6 +145,7 @@ function main() {
 
   // Move swan
   document.addEventListener("keydown", handleKeyPress);
+  /*
   document.addEventListener("keyup", function (ev) {
     if (ev.key === "ArrowUp" || ev.key === "ArrowDown") {
       g_swans[0].speed = 0;
@@ -153,7 +154,7 @@ function main() {
 
     if (ev.key === "w" || ev.key === "s")
       g_swans[1].speed = 0;
-  });
+  });*/
 
   // Register function (event handler) to be called on a mouse press
   canvas.onmousedown = function (ev) { handleMouseDown(ev); };
@@ -173,7 +174,9 @@ function tick() {
   if (!g_paused) {
 
     if (g_matingAnim) {
+      resetCam();
       moveSwansToCenter();
+
       g_matingAnimTime += 0.02;
       if (g_matingAnimTime > 3) {
         g_matingAnim = false;
@@ -206,51 +209,43 @@ function moveSwan() {
       moveZ = Math.sin(angle) * swan.speed;
     }
 
-    if (swan.idle || swan.speed !== 0) {
-      let nextX = swan.x + moveX;
-      let nextZ = swan.z + moveZ;
+    let nextX = swan.x + moveX;
+    let nextZ = swan.z + moveZ;
 
-      // check if next position is within pond bounds
-      let dist = Math.sqrt(nextX * nextX + nextZ * nextZ);
-      if (dist < pondRadius) {
-        swan.x = nextX;
-        swan.z = nextZ;
-      } else {
-        let diff = 0 - swan.angle; // 0, 0 is center of pond
-        if (swan.idle) {
-          swan.angle += diff * 0.02
-        } else {
-          //swan.speed = 0;
-          swan.angle += diff * 0.1;
-        }
-      }
-
-      //check if swan is near other swan
-      for (let j = 0; j < g_swans.length; j++) {
-        if (i !== j) {
-          let otherSwan = g_swans[j];
-          let distance = Math.sqrt(
-            Math.pow((swan.x - 5) - (otherSwan.x - 5), 2) +
-            Math.pow(swan.z - otherSwan.z, 2)
-          );
-
-          if (distance < minDistance) {
-            // calculate swan angle
-            let away = Math.atan2(swan.z - otherSwan.z, swan.x - otherSwan.x);
-            swan.x += Math.cos(away) * 0.04;
-            swan.z += Math.sin(away) * 0.02;
-
-            // adjust goal direction
-            swan.direction = (swan.direction + 5) % 360;
-          }
-        }
-      }
-
+    // check if next position is within pond bounds
+    let dist = Math.sqrt(nextX * nextX + nextZ * nextZ);
+    if (dist < pondRadius) {
+      swan.x = nextX;
+      swan.z = nextZ;
+    } else {
+      let diff = 0 - swan.angle; // 0, 0 is center of pond
+      swan.angle += diff * 0.05
     }
 
-    if (swan.idle) {
-      swan.angle += (Math.random() - 0.5) * swan.turnSpeed;
+    //check if swan is near other swan
+    for (let j = 0; j < g_swans.length; j++) {
+      if (i !== j) {
+        let otherSwan = g_swans[j];
+        let distance = Math.sqrt(
+          Math.pow((swan.x - 5) - (otherSwan.x - 5), 2) +
+          Math.pow(swan.z - otherSwan.z, 2)
+        );
+
+        if (distance < minDistance) {
+          // calculate swan angle
+          let away = Math.atan2(swan.z - otherSwan.z, swan.x - otherSwan.x);
+          swan.x += Math.cos(away) * 0.04;
+          swan.z += Math.sin(away) * 0.02;
+
+          // adjust goal direction
+          swan.direction = (swan.direction + 20) % 360;
+        }
+      }
     }
+
+
+
+    //swan.angle += (Math.random() - 0.5) * swan.turnSpeed;
 
     let diff = (swan.direction - swan.angle + 540) % 360 - 90;
     swan.angle += diff * 0.1;
@@ -259,8 +254,8 @@ function moveSwan() {
 }
 
 function moveSwansToCenter() {
-  g_swans[0].x = -1.5;
-  g_swans[0].z = 0;
+  g_swans[0].x = -1.4;
+  g_swans[0].z = 0.4;
   g_swans[0].angle = 0;
 
   g_swans[1].x = 1;
@@ -269,41 +264,33 @@ function moveSwansToCenter() {
 }
 
 function handleKeyPress(ev) {
-  const speed = 0.05;
+  const speed = 0.02;
   const acc = 0.004;
   const turnSpeed = 15;
 
   // swan 1
   if (ev.key === "ArrowUp") {
     g_swans[0].speed = Math.min(g_swans[0].speed + acc, speed);
-    g_swans[0].idle = false;
   } else if (ev.key === "ArrowDown") {
     g_swans[0].direction = (g_swans[0].direction + 90) % 360;
-    g_swans[0].idle = false;
   } else if (ev.key === "ArrowLeft") {
     g_swans[0].direction = (g_swans[0].direction + turnSpeed) % 360;
-    g_swans[0].idle = false;
   } else if (ev.key === "ArrowRight") {
     g_swans[0].direction = (g_swans[0].direction - turnSpeed) % 360;
     //g_swans[0].angle -= turnSpeed;
-    g_swans[0].idle = false;
   }
 
   //swan 2
   if (ev.key === "w") {
     g_swans[1].speed = Math.min(g_swans[1].speed + acc, speed);
-    g_swans[1].idle = false;
   } else if (ev.key === "s") {
     g_swans[1].direction = (g_swans[1].direction + 90) % 360;
-    g_swans[1].idle = false;
   } else if (ev.key === "a") {
     //g_swans[1].angle += turnSpeed;
     g_swans[1].direction = (g_swans[1].direction + turnSpeed) % 360;
-    g_swans[1].idle = false;
   } else if (ev.key === "d") {
     //g_swans[1].angle -= turnSpeed;
     g_swans[1].direction = (g_swans[1].direction - turnSpeed) % 360;
-    g_swans[1].idle = false;
   }
 
   renderAllShapes();
@@ -313,7 +300,6 @@ function handleMouseDown(ev) {
   g_currMouse = [ev.clientX, ev.clientY]
 
   if (ev.shiftKey) {
-    g_idle = false;
     g_matingAnimTime = 0;
     g_matingAnim = true;
   }
@@ -331,22 +317,7 @@ function click(ev) {
   document.getElementById("angleSlider").value = g_camX;
 
   resizeCanvas();
-  //updateViewMatrix();
   renderAllShapes();
-}
-
-function updateViewMatrix() {
-  const aspect = canvas.width / canvas.height;
-  g_ProjectionMatrix.setPerspective(60, aspect, 0.1, 100);
-
-  let angleX = g_camX * Math.PI / 180;
-  let angleY = g_camY * Math.PI / 180;
-
-  let eyeX = g_camZ * Math.sin(angleX) * Math.cos(angleY);
-  let eyeY = g_camZ * Math.sin(angleY);
-  let eyeZ = g_camZ * Math.cos(angleX) * Math.cos(angleY);
-
-  g_ProjectionMatrix.lookAt(eyeX, eyeY, eyeZ, 0, 0, 0, 0, 1, 0);
 }
 
 function convertCoordinates(ev) {
@@ -362,7 +333,7 @@ function convertCoordinates(ev) {
 function resetCam() {
   g_camX = 0;
   g_camY = 0;
-  g_camZ = 15;
+  g_camZ = 4;
   document.getElementById("angleSlider").value = g_camX;
 }
 
@@ -390,13 +361,6 @@ function renderAllShapes() {
   pond.matrix.scale(12, 0.01, 12);
   pond.render();
 
-  var heart = new Cube();
-  heart.color = [1.0, 0.2, 0.2, 1.0];
-  heart.matrix.translate(-0.3, 0.8, 0);
-  heart.matrix.rotate(45, 1, 1, 0);
-  heart.matrix.scale(0.1, 0.1, 0.1);
-  g_matingAnim ? heart.render() : null;
-
   var globalRotateMat = new Matrix4();
   gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotateMat.elements);
 
@@ -412,7 +376,7 @@ function renderAllShapes() {
     body.matrix.translate(swan.x, 0.0, swan.z);
     body.matrix.rotate(swan.angle, 0, 1, 0);
 
-    body.matrix.rotate(g_bodyX, pauseFactor * Math.sin(g_seconds * 0.8) * 2, 0, 1);
+    //body.matrix.rotate(g_bodyX, pauseFactor * Math.sin(g_seconds * 0.8) * 2, 0, 1);
 
     //reflect if odd
     if (i % 2 == 1) body.matrix.scale(-1, 1, 1);
@@ -467,6 +431,13 @@ function renderAllShapes() {
         neckAngle = 70 * (2 - g_matingAnimTime);
       }
     }
+
+    var heart = new Cube();
+    heart.color = [1.0, 0.2, 0.2, 1.0];
+    heart.matrix.translate(-0.3 + (i + 0.05), 0.8, 0);
+    heart.matrix.rotate(45, 1, 1, 0);
+    heart.matrix.scale(0.1, 0.1, 0.1);
+    g_matingAnim && !g_paused ? heart.render() : null;
 
     // NECK
     var baseNeck = new Cone();
@@ -598,7 +569,10 @@ function renderAllShapes() {
     rightWing.color = coatColor;
     rightWing.matrix = new Matrix4(bodyCoord);
     rightWing.matrix.translate(0.89, 0.1, 0.37);
-    //rightWing.matrix.rotate(20, 0, 0, 1);
+
+    let rWingFlap = Math.sin(g_seconds * 2) * 3;
+    rightWing.matrix.rotate(rWingFlap, 0, 0, 1);
+
     var rw1Coord = new Matrix4(rightWing.matrix);
     rightWing.matrix.rotate(115, 0, 0, 1);
     rightWing.matrix.scale(0.4, 0.15, 0.05)
@@ -668,6 +642,10 @@ function renderAllShapes() {
     leftWing.color = coatColor;
     leftWing.matrix = new Matrix4(bodyCoord);
     leftWing.matrix.translate(0.89, 0.1, -0.02);
+
+    let lWingFlap = Math.sin(g_seconds * 2) * 3;
+    leftWing.matrix.rotate(lWingFlap, 0, 0, 1);
+
     var lw1Coord = new Matrix4(leftWing.matrix);
     leftWing.matrix.rotate(115, 0, 0, 1);
     leftWing.matrix.scale(0.4, 0.15, 0.05)

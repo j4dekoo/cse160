@@ -191,5 +191,7 @@ function myDrawing(){
     g_shapesList.push(t);
   }
 
-  renderAllShapes();
+
 }
+
+
