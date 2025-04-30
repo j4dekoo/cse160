@@ -41,12 +41,13 @@ let g_headAngle = 0;
 let g_ProjectionMatrix = new Matrix4();
 let coatColor = [1.0, 1.0, 0.92, 1.0];
 let g_swans = [
-  { x: -1.5, y: 0, z: 0, angle: 0, direction: 0, speed: 0.01, turnSpeed: 1 },
-  { x: 1, y: 0, z: 0, angle: 0, direction: 0, speed: 0.01, turnSpeed: 1 }
+  { x: -1.5, y: 0, z: -2, angle: 0, direction: 0, speed: 0.01, turnSpeed: 0.2 },
+  { x: 1, y: 0, z: 0, angle: 0, direction: 0, speed: 0.01, turnSpeed: 0.2 }
 ]
 
 let g_matingAnim = false;
 let g_matingAnimTime = 0;
+let g_grace = 2;
 
 
 function resizeCanvas() {
@@ -116,8 +117,8 @@ function addActionsHTML() {
     resizeCanvas();
     renderAllShapes();
   });
-  document.getElementById('neckSlider').addEventListener('input', function () { g_neckAngle = this.value; renderAllShapes(); });
-  document.getElementById('headSlider').addEventListener('input', function () { g_headAngle = this.value; renderAllShapes(); });
+  document.getElementById('neckSlider').addEventListener('input', function () { !g_paused ? g_neckAngle = this.value : null; renderAllShapes(); });
+  document.getElementById('headSlider').addEventListener('input', function () { !g_paused ? g_headAngle = this.value : null; renderAllShapes(); });
 
   document.getElementById("pause").addEventListener("change", function (ev) { g_paused = ev.target.checked; });
 
@@ -170,15 +171,15 @@ var g_startTime = performance.now() / 1000.0;
 var g_seconds = performance.now() / 1000.0 - g_startTime;
 function tick() {
   g_seconds = performance.now() / 1000.0 - g_startTime;
-
   if (!g_paused) {
+    if(g_grace > 0) g_grace -= 0.02;
 
     if (g_matingAnim) {
       resetCam();
       moveSwansToCenter();
 
       g_matingAnimTime += 0.02;
-      if (g_matingAnimTime > 3) {
+      if (g_matingAnimTime > 5) {
         g_matingAnim = false;
         g_matingAnimTime = 0;
       }
@@ -218,8 +219,8 @@ function moveSwan() {
       swan.x = nextX;
       swan.z = nextZ;
     } else {
-      let diff = 0 - swan.angle; // 0, 0 is center of pond
-      swan.angle += diff * 0.05
+      swan.angle += -swan.angle * 0.01;
+      //swan.direction = Math.atan(swan.z, swan.x) * 180 / Math.PI;
     }
 
     //check if swan is near other swan
@@ -231,36 +232,40 @@ function moveSwan() {
           Math.pow(swan.z - otherSwan.z, 2)
         );
 
-        if (distance < minDistance) {
+        if (distance < minDistance && g_grace <= 0) {
           // calculate swan angle
           let away = Math.atan2(swan.z - otherSwan.z, swan.x - otherSwan.x);
           swan.x += Math.cos(away) * 0.04;
           swan.z += Math.sin(away) * 0.02;
 
           // adjust goal direction
-          swan.direction = (swan.direction + 20) % 360;
+          swan.direction = (swan.direction + 5) % 360;
+          
         }
       }
+
+      let diff = (swan.direction - swan.angle) % 360;
+      swan.angle += diff * 0.1;
     }
 
-
-
-    //swan.angle += (Math.random() - 0.5) * swan.turnSpeed;
-
-    let diff = (swan.direction - swan.angle + 540) % 360 - 90;
-    swan.angle += diff * 0.1;
 
   }
 }
 
 function moveSwansToCenter() {
-  g_swans[0].x = -1.4;
-  g_swans[0].z = 0.4;
-  g_swans[0].angle = 0;
+  g_headAngle = 0;
+  g_neckAngle = 0;
+  g_grace = 0;
+
+  g_swans[0].x = -1.3;
+  g_swans[0].z = 0;
+  g_swans[0].angle = -20;
+  g_swans[0].direction = 0;
 
   g_swans[1].x = 1;
-  g_swans[1].z = 0;
-  g_swans[1].angle = 0;
+  g_swans[1].z = 0.2;
+  g_swans[1].angle = 20;
+  g_swans[1].direction = 0;
 }
 
 function handleKeyPress(ev) {
@@ -335,6 +340,7 @@ function resetCam() {
   g_camY = 0;
   g_camZ = 4;
   document.getElementById("angleSlider").value = g_camX;
+  resizeCanvas();
 }
 
 function updateAnimationAngles() {
@@ -348,6 +354,8 @@ function renderAllShapes() {
   gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, new Matrix4().elements);
 
   gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_ProjectionMatrix.elements);
+
+  console.log(g_grace);
 
   let pauseFactor = g_paused ? 0 : 1;
   // Clear <canvas>
@@ -425,18 +433,21 @@ function renderAllShapes() {
     // MATING ANIM 
     let neckAngle = 0;
     if (g_matingAnim) {
-      if (g_matingAnimTime < 1) {
-        neckAngle = 70 * g_matingAnimTime;
-      } else {
-        neckAngle = 70 * (2 - g_matingAnimTime);
+      if (g_matingAnimTime < 2.8) {
+        neckAngle = 30 * g_matingAnimTime;
+      } else if (g_matingAnimTime < 2.9) {
+        neckAngle = 30 * 2.8;
+      } else{
+        let t = g_matingAnimTime - 2.9;
+        neckAngle = 60 * Math.max(-3, 1 - t);
       }
     }
 
     var heart = new Cube();
     heart.color = [1.0, 0.2, 0.2, 1.0];
-    heart.matrix.translate(-0.3 + (i + 0.05), 0.8, 0);
-    heart.matrix.rotate(45, 1, 1, 0);
-    heart.matrix.scale(0.1, 0.1, 0.1);
+    heart.matrix.translate(-0.3, 0.6 + 0.1 * Math.sin((g_seconds % 20) * 0.8 * Math.PI), 0);
+    i % 2 == 0 ? heart.matrix.rotate(40, 0, 0, 1) : heart.matrix.rotate(-40, 0, 0, 1);
+    i % 2 == 0 ? heart.matrix.scale(0.1, 0.12, 0.1) : heart.matrix.scale(0.1, 0.2, 0.1);
     g_matingAnim && !g_paused ? heart.render() : null;
 
     // NECK
@@ -571,7 +582,7 @@ function renderAllShapes() {
     rightWing.matrix.translate(0.89, 0.1, 0.37);
 
     let rWingFlap = Math.sin(g_seconds * 2) * 3;
-    rightWing.matrix.rotate(rWingFlap, 0, 0, 1);
+    !g_paused ? rightWing.matrix.rotate(rWingFlap, 0, 0, 1) : null;
 
     var rw1Coord = new Matrix4(rightWing.matrix);
     rightWing.matrix.rotate(115, 0, 0, 1);
@@ -627,7 +638,6 @@ function renderAllShapes() {
         -0.001 * i + 0.04// slight offset to avoid z-fighting
       );
 
-      let flutter = Math.sin(g_seconds * 23 + i) * 0.1;
       feather.matrix.rotate(-8 * i * 0.8, 0.6, 0, 1);
       feather.matrix.scale(
         0.2 + i * 0.08,
@@ -644,7 +654,7 @@ function renderAllShapes() {
     leftWing.matrix.translate(0.89, 0.1, -0.02);
 
     let lWingFlap = Math.sin(g_seconds * 2) * 3;
-    leftWing.matrix.rotate(lWingFlap, 0, 0, 1);
+    !g_paused ? leftWing.matrix.rotate(lWingFlap, 0, 0, 1) : null;
 
     var lw1Coord = new Matrix4(leftWing.matrix);
     leftWing.matrix.rotate(115, 0, 0, 1);
@@ -699,7 +709,6 @@ function renderAllShapes() {
         -0.001 * i - 0.03// slight offset to avoid z-fighting
       );
 
-      let flutter = Math.sin(g_seconds * 23 + i) * 0.1;
       feather.matrix.rotate(-8 * i * 0.8, -0.6, 0, 1);
       feather.matrix.scale(
         0.2 + i * 0.08,
