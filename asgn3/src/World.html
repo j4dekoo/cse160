@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>world</title>
+</head>
+
+<body onload="main()">
+  <canvas id="webgl" style="width: 100%; height: 100%; display: block">
+    Please use a browser that supports "canvas"
+  </canvas>
+
+  <p>
+    <label id="numdot" style="margin-right: 3%;">XXX</label>
+  </p>
+
+  <p>
+    <button type="button" id="resetCamButton" style="margin-right: 5%;">Reset Camera</button>
+
+    <label style="margin-left: 5%;"><input type="checkbox" id="pause">Pause</label>
+  </p>
+
+
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="Camera.js"></script>
+    <script src="Triangle.js"></script>
+    <script src="Cube.js"></script>
+    <script src="World.js"></script>
+</body>
+
+</html>
