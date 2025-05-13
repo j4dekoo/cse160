@@ -271,9 +271,9 @@ function handleKeyDown(ev) {
   } else if (ev.key === "s") {
     translate(fwd, -0.15);
   } else if (ev.key === "a") {
-    cam.pos[0] -= 0.2;
+    translate(right, 0.15);
   } else if (ev.key === "d") {
-    cam.pos[0] += 0.2;
+    translate(right, -0.15);
   } else if (ev.key === "q") {
     cam.yaw -= 4;
   } else if (ev.key === "e") {
