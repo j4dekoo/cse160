@@ -39,6 +39,13 @@ var FSHADER_SOURCE = `
   uniform float u_specStrength;
   uniform bool u_lightOn;
 
+  // spotlight
+  uniform vec3 u_spotDir;
+  uniform vec3 u_spotPos;
+  uniform float u_spotCut;
+  uniform bool u_spotOn;
+  uniform vec3 u_spotColor;
+
   void main() {
     if (u_TexNum == -3) {
       gl_FragColor = vec4((v_Normal+1.0)/2.0, 1.0);
@@ -80,8 +87,21 @@ var FSHADER_SOURCE = `
 
     vec3 diffuse = vec3(gl_FragColor) * nDotL * 0.7;
     vec3 ambient = vec3(gl_FragColor) * 0.3;
+    vec3 color = ambient;
     
-    if(u_lightOn) gl_FragColor = vec4(specular + diffuse + ambient, 1.0);
+    if(u_lightOn) color += diffuse + specular;
+
+    // spotlight calc
+    if (u_spotOn) {
+      vec3 spotVec = normalize(u_spotPos - vec3(v_VertPos));
+      float spotCos = dot(spotVec, normalize(-u_spotDir));
+      if (spotCos > u_spotCut) {
+        vec3 spotEffect = pow(spotCos, 30.0) * u_spotColor;
+        color += spotEffect;
+      }
+    }
+
+    gl_FragColor = vec4(color, 1.0);
     
   }
 `;
@@ -90,14 +110,18 @@ var FSHADER_SOURCE = `
 let canvas, gl, a_Position, u_FragColor, a_UV, u_ModelMatrix, u_GlobalRotateMatrix, u_ProjectionMatrix, u_ViewMatrix, u_NormalMatrix;
 let u_TexNum, u_Sampler0, u_Sampler1, u_Sampler2;
 let a_Normal, u_lightPos, u_cameraPos, u_specStrength, u_lightOn;
+let u_spotDir, u_spotPos, u_spotCut, u_spotOn, u_spotColor;
 let g_currMouse = [0, 0];
 let g_camX = 0, g_camY = 0, g_camZ = 4;
 let g_eyeX = 0, g_eyeY = 0, g_eyeZ = 4;
 let g_lastUpdate = 0;
 let g_paused = false;
+
 let g_normalOn = false;
 let g_lightPos = [0, 1.5, -2];
 let g_lightOn = 1;
+let g_spotOn = 1;
+var g_spotlightPos = [3.0, 3.0, -1.0];
 
 // camera angle
 let g_globalAngle = 0;
@@ -118,6 +142,7 @@ let g_matingAnim = false;
 let g_matingAnimTime = 0;
 let g_grace = 2;
 
+let bunny;
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
@@ -154,6 +179,7 @@ function setupWebGL() {
 }
 
 function connectVariablesToGLSL() {
+
   // Initialize shaders
   if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
     console.log('Failed to intialize shaders.');
@@ -201,6 +227,12 @@ function connectVariablesToGLSL() {
     console.log('Failed to get the storage location');
     return;
   }
+
+  u_spotDir = gl.getUniformLocation(gl.program, 'u_spotDir');
+  u_spotPos = gl.getUniformLocation(gl.program, 'u_spotPos');
+  u_spotCut = gl.getUniformLocation(gl.program, 'u_spotCut');
+  u_spotOn = gl.getUniformLocation(gl.program, 'u_spotOn');
+  u_spotColor = gl.getUniformLocation(gl.program, 'u_spotColor');
 }
 
 function addActionsHTML() {
@@ -209,6 +241,9 @@ function addActionsHTML() {
 
   document.getElementById("lightOn").onclick = function() { g_lightOn = true; renderAllShapes(); };
   document.getElementById("lightOff").onclick = function() { g_lightOn = false; renderAllShapes(); };
+
+  document.getElementById("spotOn").onclick = function() { g_spotOn = true; renderAllShapes(); };
+  document.getElementById("spotOff").onclick = function() { g_spotOn = false; renderAllShapes(); };
 
   document.getElementById("lightX").addEventListener("input", function () { g_lightPos[0] = parseFloat(this.value)/100; renderAllShapes(); });
   document.getElementById("lightY").addEventListener("input", function () { g_lightPos[1] = parseFloat(this.value)/100; renderAllShapes(); });
@@ -232,6 +267,8 @@ function main() {
   setupWebGL();
 
   connectVariablesToGLSL();
+
+  program = 
 
   addActionsHTML();
 
@@ -257,6 +294,8 @@ function main() {
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.5, 0.2, 0.2, 0.35);
+
+  bunny = new Model(gl, "../bunny.obj");
 
   requestAnimationFrame(tick);
 }
@@ -450,7 +489,6 @@ function renderAllShapes() {
 
   gl.uniformMatrix4fv(u_ProjectionMatrix, false, g_ProjectionMatrix.elements);
 
-
   let pauseFactor = g_paused ? 0 : 1;
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -474,6 +512,12 @@ function renderAllShapes() {
   pond.matrix.scale(12, 0.01, 12);
   pond.render();
 
+  bunny.color = [1.0, 0.0, 1.0, 1.0];
+  bunny.matrix.setScale(0.5, 0.5, 0.5);
+  bunny.matrix.translate(3.0, -2.0, -4.0);
+  bunny.matrix.rotate(90, 0, 1, 0);
+  bunny.render(gl);
+
   var globalRotateMat = new Matrix4();
   gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotateMat.elements);
 
@@ -484,12 +528,25 @@ function renderAllShapes() {
 
   gl.uniform1i(u_lightOn, g_lightOn);
 
+  gl.uniform3fv(u_spotDir, new Float32Array([0, -1, 0]));
+  gl.uniform3fv(u_spotPos, new Float32Array(g_spotlightPos));
+  gl.uniform1f(u_spotCut, Math.cos(70 * Math.PI / 180));
+  gl.uniform3fv(u_spotColor, new Float32Array([0.8, 0.3, 0.2]));
+  gl.uniform1i(u_spotOn, g_spotOn);
+
   var light = new Cube();
   light.color = [2.0, 2.0, 0.2, 1.0];
   light.matrix.translate(g_lightPos[0], g_lightPos[1], g_lightPos[2]);
   light.matrix.scale(-0.1, -0.1, -0.1);
   light.matrix.translate(-0.5, -0.5, -0.5);
   light.render();
+
+  // spotlight
+  var spotlight = new Cube();
+  spotlight.color = [1.0, 1.0, 0.8, 1.0];
+  spotlight.matrix.translate(g_spotlightPos[0], g_spotlightPos[1], g_spotlightPos[2]);
+  spotlight.matrix.scale(-0.1, -0.1, -0.1);
+  spotlight.render();
 
   var sphere = new Sphere(20);
   if (g_normalOn) sphere.texNum = -3;
