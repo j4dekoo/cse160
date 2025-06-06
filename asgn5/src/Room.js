@@ -47,5 +47,31 @@ export default function createRoom({
     scene.add(wall2);
   });
 
+  loader.load('assets/moodposter.jpg', (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      color: 0x80573d,
+    });
+    const poster = new THREE.Mesh(geometry, material);
+    poster.scale.set(0.375, 6, 0.001);
+    poster.position.set(-3.5, 2.0, 0.2);
+    poster.rotation.y = Math.PI / 2;
+    scene.add(poster);
+  });
+
+  loader.load('assets/motoposter.jpg', (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      color: 0x80573d,
+    });
+    const poster2 = new THREE.Mesh(geometry, material);
+    poster2.scale.set(0.3, 5.5, 0.001);
+    poster2.position.set(-3.4, 1.5, 1.8);
+    poster2.rotation.y = Math.PI / 2;
+    scene.add(poster2);
+  });
+
   return room;
 }

@@ -7,6 +7,9 @@ import { loadBar } from './src/BarLoader.js';
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
+const listener = new THREE.AudioListener();
+camera.add(listener);  
+
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animate);
@@ -21,11 +24,11 @@ room.position.set(0, 0, -1);
 scene.add(room);
 
 // RECORD
-const recordPos = new THREE.Vector3(-1.6, 0.27, -0.3);
+const recordPos = new THREE.Vector3(-2.0, 0.32, -0.45);
 let mixer = null;
 new GLTFLoader().load("assets/vinyl.glb", (gltf) => {
     const vinyl = gltf.scene;
-    vinyl.scale.setScalar(0.5);
+    vinyl.scale.setScalar(0.6);
     vinyl.position.copy(recordPos);
     vinyl.traverse((o) => (o.castShadow = true));
     scene.add(vinyl);
@@ -39,12 +42,23 @@ new GLTFLoader().load("assets/vinyl.glb", (gltf) => {
         .play();
 });
 
+// AUDIO
+const bgTrack = new THREE.Audio(listener);
+new THREE.AudioLoader().load('audio/piccioni.ogg', buffer => {
+  bgTrack.setBuffer(buffer);
+  bgTrack.setLoop(true);
+  bgTrack.setVolume(0.4);
+  bgTrack.play();
+});
+scene.add(bgTrack); 
+
+
 // LIGHT
-const fill = new THREE.AmbientLight(0xffffff, 0.6);
+const fill = new THREE.AmbientLight(0x610707, 0.8);
 scene.add(fill);
 
 const bulbColor = 0xfad873;
-const bulbInt = 100;
+const bulbInt = 80;
 const bulbLight = new THREE.PointLight(bulbColor, bulbInt, 7);
 bulbLight.position.set(1.5, 3, 0);
 scene.add(bulbLight);
