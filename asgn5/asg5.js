@@ -15,8 +15,16 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setAnimationLoop(animate);
 document.body.appendChild(renderer.domElement);
 
+// CAMERA CONTROLS
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 1.2, 0);
+controls.target.set(0, 1.0, -0.5);
+
+controls.minAzimuthAngle = THREE.MathUtils.degToRad(-45);
+controls.maxAzimuthAngle = THREE.MathUtils.degToRad(50);
+
+controls.minDistance = 1.2;
+controls.maxDistance = 6.0; 
+
 controls.update();
 
 const room = createRoom({ width: 7, depth: 8, height: 9, scene: scene, });
@@ -80,15 +88,33 @@ scene.add(bulb2);
     }
 })();
 
+const fanPivot = new THREE.Group();
+fanPivot.position.set(0, 3.8, -2.0);
+scene.add(fanPivot);
+
+const fanLoader = new GLTFLoader();
+fanLoader.load('assets/fan.glb', gltf => {
+  const fan = gltf.scene;
+  fan.scale.setScalar(1.3);
+  fan.rotation.y = 0;
+  fan.position.set(0, 0.25, 0);
+  fan.traverse(o => (o.castShadow = o.receiveShadow = true));
+
+  fanPivot.add(fan);                // <— key line: attach to pivot
+}, undefined, err => console.error('Fan load error:', err));
+
 camera.position.set(0, 1, 5);
 camera.lookAt(0, 1.2, 0);
 
+const fanRPM     = 45;                           
+const fanRadSec  = fanRPM / 60 * Math.PI * 2;
 const clock = new THREE.Clock();
 
 function animate() {
-
     controls.update();
     const delta = clock.getDelta();
+
+    fanPivot.rotation.y += fanRadSec * delta; 
 
     if (mixer) {
         mixer.update(delta);
