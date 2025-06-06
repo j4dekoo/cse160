@@ -1,6 +1,7 @@
 bar for one
 
 assets credit:
+
 Glass of beer by Poly by Google [CC-BY] via Poly Pizza
 
 Stereo rack main by Silverstone78 [CC-BY] via Poly Pizza
