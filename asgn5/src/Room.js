@@ -31,7 +31,7 @@ export default function createRoom({
 
   // add record wall
   const loader = new THREE.TextureLoader();
-  loader.load('assets/recordwall.jpg', (texture) => {
+  loader.load('../assets/recordwall.jpg', (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.MeshBasicMaterial({
       map: texture,
@@ -47,7 +47,7 @@ export default function createRoom({
     scene.add(wall2);
   });
 
-  loader.load('assets/moodposter.jpg', (texture) => {
+  loader.load('../assets/moodposter.jpg', (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.MeshBasicMaterial({
       map: texture,
@@ -60,7 +60,7 @@ export default function createRoom({
     scene.add(poster);
   });
 
-  loader.load('assets/motoposter.jpg', (texture) => {
+  loader.load('../assets/motoposter.jpg', (texture) => {
     texture.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.MeshBasicMaterial({
       map: texture,

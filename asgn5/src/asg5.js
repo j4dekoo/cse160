@@ -1,14 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import createRoom from './src/Room.js';
-import { loadBar } from './src/BarLoader.js';
+import createRoom from './Room.js';
+import { loadBar } from './BarLoader.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 const listener = new THREE.AudioListener();
-camera.add(listener);  
+camera.add(listener);
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -34,7 +34,7 @@ scene.add(room);
 // RECORD
 const recordPos = new THREE.Vector3(-2.0, 0.32, -0.45);
 let mixer = null;
-new GLTFLoader().load("assets/vinyl.glb", (gltf) => {
+new GLTFLoader().load("../assets/vinyl.glb", (gltf) => {
     const vinyl = gltf.scene;
     vinyl.scale.setScalar(0.6);
     vinyl.position.copy(recordPos);
@@ -52,14 +52,12 @@ new GLTFLoader().load("assets/vinyl.glb", (gltf) => {
 
 // AUDIO
 const bgTrack = new THREE.Audio(listener);
-new THREE.AudioLoader().load('audio/piccioni.ogg', buffer => {
+new THREE.AudioLoader().load('../audio/piccioni.ogg', buffer => {
   bgTrack.setBuffer(buffer);
   bgTrack.setLoop(true);
-  bgTrack.setVolume(0.4);
-  bgTrack.play();
+  bgTrack.setVolume(0.2);
 });
 scene.add(bgTrack); 
-
 
 // LIGHT
 const fill = new THREE.AmbientLight(0x610707, 0.8);
@@ -93,7 +91,7 @@ fanPivot.position.set(0, 3.8, -2.0);
 scene.add(fanPivot);
 
 const fanLoader = new GLTFLoader();
-fanLoader.load('assets/fan.glb', gltf => {
+fanLoader.load('../assets/fan.glb', gltf => {
   const fan = gltf.scene;
   fan.scale.setScalar(1.3);
   fan.rotation.y = 0;
@@ -122,3 +120,21 @@ function animate() {
     renderer.render(scene, camera);
 
 }
+
+// ENTRY POINT
+const startButton = document.createElement('button');
+startButton.textContent = 'Play some jazz :)';
+startButton.style.position = 'absolute';
+startButton.style.width = '175px';
+startButton.style.borderRadius = '10px';
+startButton.style.fontSize = '18px';
+startButton.style.top = '90%';
+startButton.style.left = '50%';
+startButton.style.transform = 'translate(-50%, -50%)';
+
+document.body.appendChild(startButton);
+startButton.addEventListener('click', () => {
+    listener.context.resume();
+    bgTrack.play();
+    startButton.remove();
+})

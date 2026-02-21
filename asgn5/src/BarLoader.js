@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-export async function loadBar({ path = 'assets/' } = {}) {
+export async function loadBar({ path = '../assets/' } = {}) {
     const loader = new GLTFLoader();
     loader.setPath(path);
 
